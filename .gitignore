@@ -1,0 +1,7 @@
+.idea/*
+*.pyc
+database/
+temp
+.ropeproject/
+config.json
+*.swp
