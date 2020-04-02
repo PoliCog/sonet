@@ -2,17 +2,19 @@
 Creates the connector to store and access the Mongo database.
 """
 
-__author__ = 'ashwin'
+__author__ = 'Ashwin'
+__email__ = 'gashwin1@umbc.edu'
 
-# Python Mongo.
+
+""# Python Mongo.
 import pymongo
 from pymongo.bulk import BulkWriteError
 from pymongo.helpers import DuplicateKeyError
 
 
 # This is the client for Mongo Database.
-class MongoClient:
-    def __init__(self, config):
+class MongoClient(object):
+    def __init__(self, config, collection_name='twitter_data'):
         # Define the constants to be used.
         # These are the indexes to be used in the file containing
         # information about the mongo database.
@@ -21,7 +23,7 @@ class MongoClient:
 
         # The database name.
         self.__DATABASE_NAME = 'twitter'
-        self.__TWITTER_COLLECTION = 'twitter_data'
+        self.__TWITTER_COLLECTION = collection_name
 
         # Define the hidden parameters.
         self.__m_client = None
@@ -56,19 +58,21 @@ class MongoClient:
 
         return self.__m_t_collection
 
+    # Read all the documents in a collection.
+    def read_all(self):
+        return self.__m_t_collection.find({})
+
     ##########################################################################
     # In case the item does not have the parameter '_id' set then, then it is
     # automatically generated and assigned by MongoDB.
     ##########################################################################
     # Insert a document or bulk into twitter data collection.
-    def insert(self, items, collection_name=None):
+    def insert(self, items):
         # UnboundLocalError does not come up in case of an exception.
         collect = []
         try:
-            if collection_name is None:
                 collect = self.__m_t_collection.insert(items, continue_on_error=True)
-            else:
-                collect = self.__m_db[collection_name].insert(items, continue_on_error=True)
+
         except BulkWriteError:
             print("BulkWriteError: ", BulkWriteError.details)
         except DuplicateKeyError:

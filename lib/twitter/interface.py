@@ -12,6 +12,7 @@ __email__ = "gashwin1@umbc.edu"
 # Standard Libs.
 import time
 import json
+from tqdm import tqdm
 
 # Twitter.
 import tweepy
@@ -53,14 +54,15 @@ class TwitterInterface():
     3. access_token
     4. access_token_secret
     """
-    def __init__(self, config):
+    def __init__(self, config, collection_name='twitter_data'):
         # Defining the constants that are being used.
         ######################################################
         self.__AUTH_INDEX_NAME = 'auth'
         self.__DATABASE_INDEX_NAME = 'database'
         self.__twitter_api = []
         self.__MAX_TWEET_PER_PAGE = 100
-        self.__SLEEP_TIME = 15 * 60
+        self.__MAX_MINUTES = 16
+        self.__SLEEP_TIME = self.__MAX_MINUTES * 60
 
         # This is for API's.
         self.__api_gen = None
@@ -76,7 +78,9 @@ class TwitterInterface():
         self.__curr_api = self.__get_api()
 
         # Setup the MongoClient, so that database operations can be performed.
-        self.__mongo_client = MongoClient(config[self.__DATABASE_INDEX_NAME])
+        self.__collection = collection_name
+        self.__mongo_client = MongoClient(config[self.__DATABASE_INDEX_NAME],
+                                          self.__collection)
 
     # This is a generator to generate API from a circular queue.
     def __get_current_api(self):
@@ -84,13 +88,20 @@ class TwitterInterface():
         while True:
             # Switch to a new key.
             for api in self.__twitter_api:
+                print("Switching API Keys...")
                 yield api
 
             # OPTION 2:
             # Back off from querying by sleeping for sometime.
             print("Rate-limit reached & No more API's left, " \
                   "Sleeping for a " + str(self.__SLEEP_TIME) + " seconds.")
-            time.sleep(self.__SLEEP_TIME)
+
+            # Once the API has been changed, continue collecting tweets.
+            pbar = tqdm(range(self.__MAX_MINUTES))
+            for i in pbar:
+                time.sleep(60)
+                pbar.set_description("Twitter Waiting Time (Minutes)")
+
 
     # Get a continuous stream of API's.
     def __get_api(self):
@@ -168,14 +179,14 @@ class TwitterInterface():
                 break
             except tweepy.TweepError as error:
                 """
-                The errors that have been handled are:
-                1. Code 88: Rate limit exceeded. The solution is to sleep for a 15 minute period, till
-                   Twitter reset the rate.
+                 The errors that have been handled are:
+                 1. Code 429: Rate limit exceeded. The solution is to sleep for a 15 minute period, till
+                    Twitter reset the rate.
                 """
-                error_message = json.loads(error[0])
+                code = int(error.reason.split("\n")[0].split(" ")[-1])
+
                 # The rate-limit has been reached.
-                if error_message['errors'][0]["code"] == 88:
+                if code == 429:
                     self.__curr_api = self.__get_api()
-                # Once the API has been changed, continue collecting tweets.
 
         return 0
