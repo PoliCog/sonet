@@ -3,5 +3,6 @@
 database/
 temp
 .ropeproject/
-config.json
+auth.json
 *.swp
+output/

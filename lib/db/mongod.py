@@ -62,6 +62,9 @@ class MongoClient(object):
     def read_all(self):
         return self.__m_t_collection.find({})
 
+    def read_one(self):
+        return self.__m_t_collection.findOne()
+
     ##########################################################################
     # In case the item does not have the parameter '_id' set then, then it is
     # automatically generated and assigned by MongoDB.

@@ -54,7 +54,7 @@ class TwitterInterface():
     3. access_token
     4. access_token_secret
     """
-    def __init__(self, config, collection_name='twitter_data'):
+    def __init__(self, config, auth, collection_name='twitter_data'):
         # Defining the constants that are being used.
         ######################################################
         self.__AUTH_INDEX_NAME = 'auth'
@@ -72,7 +72,7 @@ class TwitterInterface():
             raise Exception("Configuration is not available.")
 
         # Check the number of keys in the config.
-        for auth_keys in config[self.__AUTH_INDEX_NAME]:
+        for auth_keys in auth[self.__AUTH_INDEX_NAME]:
             self.__twitter_api.append(TwitterAPI(auth_keys))
 
         self.__curr_api = self.__get_api()
